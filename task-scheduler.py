@@ -63,6 +63,20 @@ class SchedulerApp:
         # Initialize task storage
         self.tasks = self.load_tasks()
         
+        self.reminders = {}
+        # { date: { taskname : [datetime, remyesno, reminderdt] } }
+        for d,task in self.tasks.items(): # t = date, ts = [ { task1: [dt,r,rm], task2: [dt,r,rm],... ]
+            for t,ts in task.items():
+                if ts[1]:
+                    if QtCore.QDateTime.fromString(ts[0]).secsTo(QtCore.QDateTime.currentDateTime()) < 0:
+                        self.reminders[ts[2]]=t
+        
+        print("Reminders: ", self.reminders)
+        
+        self.rtimer = QtCore.QTimer(self.app)
+        self.rtimer.timeout.connect(self.reminder_check)
+        self.rtimer.start(1000)
+        
         # Highlight format for dates with tasks
         self.task_format = QtGui.QTextCharFormat()
         self.task_format.setBackground(QtGui.QColor("#90EE90"))
@@ -91,7 +105,17 @@ class SchedulerApp:
     
     # Check time for reminder
     def reminder_check(self):
-        pass
+        current_time = QtCore.QDateTime.currentDateTime()
+        for r,t in self.reminders.copy().items():
+            d = QtCore.QDateTime.fromString(r)
+            if d.secsTo(current_time) > 0:                
+                self.tray_icon.showMessage(
+                    "Reminder!",
+                    t+" at "+d.time().toString("hh:mm AP")+"!",
+                    QtGui.QIcon.fromTheme("dialog-information"),
+                    current_time.secsTo( QtCore.QDateTime.fromString(self.tasks[d.date()][t][0]) )*1000 # Display reminder till task time
+                )
+                del self.reminders[r]
     
     # Task manager window
     def task_manager(self,date):
@@ -136,7 +160,10 @@ class SchedulerApp:
         taskman.setFocus()
     
     def need_reminder(self,state):
-        taskwin = self.task_popup.edit_task_popup if self.task_popup.edit_task_popup else self.task_popup.add_task_popup
+        if hasattr(self.task_popup, "edit_task_popup"):
+            taskwin = self.task_popup.edit_task_popup
+        else:
+            taskwin = self.task_popup.add_task_popup
         if state == QtCore.Qt.Checked:
             taskwin.reminder_area.show()
         else:

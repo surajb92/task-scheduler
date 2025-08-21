@@ -10,12 +10,26 @@
         "Lunch with the boys": [
             "Fri Aug 8 15:00:00 2025",
             true,
-            "Fri Aug 8 14:00:00 2025"
+            "Fri Aug 8 14:15:00 2025"
         ],
         "Jogging": [
             "Fri Aug 8 06:00:00 2025",
             true,
             "Fri Aug 8 05:45:00 2025"
+        ]
+    },
+    "2025-08-21": {
+        "go home": [
+            "Thu Aug 21 14:27:00 2025",
+            true,
+            "Thu Aug 21 14:24:00 2025"
+        ]
+    },
+    "2025-08-22": {
+        "go home tomorrow": [
+            "Fri Aug 22 14:00:00 2025",
+            true,
+            "Fri Aug 22 13:57:00 2025"
         ]
     }
 }
