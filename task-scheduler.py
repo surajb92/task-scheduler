@@ -64,14 +64,8 @@ class SchedulerApp:
         self.tasks = self.load_tasks()
         
         self.reminders = {}
+        self.refresh_reminders()
         # { date: { taskname : [datetime, remyesno, reminderdt] } }
-        for d,task in self.tasks.items(): # t = date, ts = [ { task1: [dt,r,rm], task2: [dt,r,rm],... ]
-            for t,ts in task.items():
-                if ts[1]:
-                    if QtCore.QDateTime.fromString(ts[0]).secsTo(QtCore.QDateTime.currentDateTime()) < 0:
-                        self.reminders[ts[2]]=t
-        
-        print("Reminders: ", self.reminders)
         
         self.rtimer = QtCore.QTimer(self.app)
         self.rtimer.timeout.connect(self.reminder_check)
@@ -85,6 +79,14 @@ class SchedulerApp:
         # Highlight existing tasks
         self.highlight_task_dates()
 
+    def refresh_reminders(self):
+        self.reminders.clear()
+        for d,task in self.tasks.items(): # t = date, ts = [ { task1: [dt,r,rm], task2: [dt,r,rm],... ]
+            for t,ts in task.items():
+                if ts[1]:
+                    if QtCore.QDateTime.fromString(ts[0]).secsTo(QtCore.QDateTime.currentDateTime()) < 0:
+                        self.reminders[ts[2]]=t
+    
     # Load tasks from JSON file
     def load_tasks(self):
         try:
@@ -107,13 +109,14 @@ class SchedulerApp:
     def reminder_check(self):
         current_time = QtCore.QDateTime.currentDateTime()
         for r,t in self.reminders.copy().items():
-            d = QtCore.QDateTime.fromString(r)
-            if d.secsTo(current_time) > 0:                
+            rdt = QtCore.QDateTime.fromString(r)
+            if rdt.secsTo(current_time) > 0:        
+                tdt = QtCore.QDateTime.fromString(self.tasks[rdt.date()][t][0])        
                 self.tray_icon.showMessage(
                     "Reminder!",
-                    t+" at "+d.time().toString("hh:mm AP")+"!",
+                    t+" at "+tdt.time().toString("hh:mm AP")+"!",
                     QtGui.QIcon.fromTheme("dialog-information"),
-                    current_time.secsTo( QtCore.QDateTime.fromString(self.tasks[d.date()][t][0]) )*1000 # Display reminder till task time
+                    current_time.secsTo(tdt)*1000 # Display reminder till task time
                 )
                 del self.reminders[r]
     
@@ -260,6 +263,7 @@ class SchedulerApp:
         else:
             self.tasks[d] = { tname : savedate }
         self.update_task_list()
+        self.refresh_reminders()
         self.highlight_task_dates()
         self.save_tasks()
         addtask.close()
@@ -373,6 +377,7 @@ class SchedulerApp:
             self.tasks[d][tname] = savedate
         
         self.update_task_list()
+        self.refresh_reminders()
         self.highlight_task_dates()
         self.save_tasks()
         edittask.close()
@@ -413,6 +418,7 @@ class SchedulerApp:
                 self.calendar_popup.calendar.setDateTextFormat(taskman.task_date,QtGui.QTextCharFormat()) # Reset highlighting when last task is removed
             self.save_tasks()
             self.update_task_list()
+            self.refresh_reminders()
             self.highlight_task_dates()
     
     # Highlight dates with tasks on the calendar.
