@@ -38,7 +38,7 @@ class SchedulerApp:
         
         # Create system tray icon
         self.tray_icon = QtWidgets.QSystemTrayIcon()
-        self.tray_icon.setIcon(QtGui.QIcon.fromTheme("dialog-information"))
+        self.tray_icon.setIcon(QtGui.QIcon("tico.png")) # QtGui.QIcon.fromTheme("dialog-information"))
         self.tray_icon.setToolTip("Task Scheduler")
         self.tray_icon.show()
         
